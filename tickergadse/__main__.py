@@ -103,7 +103,7 @@ class TickerGadse:
                 logger.info(f"retiring thread {t.thread_id}")
             else:
                 active = join_dicts(
-                    self._retired_postcount,
+                    active,
                     stats,
                     op=operator.add,
                 )
@@ -165,7 +165,7 @@ async def main() -> int:
     gadse = TickerGadse(window=window)
 
     while True:
-        await gadse.update()
+        ranking = await gadse.update()
         await asyncio.sleep(args.interval)
 
     return 0
