@@ -39,7 +39,7 @@ from selenium import webdriver  # type: ignore
 from selenium.webdriver.chrome.options import Options  # type: ignore
 from selenium.webdriver.common.by import By  # type: ignore
 
-
+from .dataclasses import Posting, Thread
 from .utils import asyncnullcontext
 
 
@@ -75,19 +75,18 @@ class DerStandardAPI:
         ticker_id: Union[int, str],
         *,
         client_session: Optional[ClientSession] = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[Thread]:
         """Get a list of thread IDs of a ticker."""
         url = self.URL(f"/jetzt/api/redcontent?id={ticker_id}&ps=1000000")
         context = asyncnullcontext(client_session) if client_session else self.session()
         async with context as session:
             async with session.get(url) as resp:
                 return [
-                    {
-                        "id": t["id"],
-                        "published": dateparser.parse(t["ctd"]).astimezone(pytz.utc),
-                        "ticker": ticker_id,
-                        "crawled": dt.datetime.utcnow(),
-                    }
+                    Thread(
+                        thread_id=t["id"],
+                        published=dateparser.parse(t["ctd"]).astimezone(pytz.utc),
+                        ticker_id=int(ticker_id),
+                    )
                     for t in (await resp.json())["rcs"]
                 ]
 
@@ -116,7 +115,7 @@ class DerStandardAPI:
         thread_id: Union[int, str],
         *,
         client_session: Optional[ClientSession] = None,
-    ) -> Any:
+    ) -> list[Posting]:
         """Get all postings in a ticker thread."""
         postings = []
         page = await self._get_thread_postings_page(
@@ -137,15 +136,14 @@ class DerStandardAPI:
         # Remove duplicates.
         postings = list({p["pid"]: p for p in postings}.values())
         return [
-            {
-                "id": p["pid"],
-                "parent": p["ppid"],
-                "user": p["cid"],
-                "thread": thread_id,
-                "message": p["tx"],
-                "published": dateparser.parse(p["cd"]).astimezone(pytz.utc),
-                "crawled": dt.datetime.utcnow(),
-            }
+            Posting(
+                posting_id=p["pid"],
+                parent_id=p["ppid"],
+                user=p["cn"],
+                thread_id=int(thread_id),
+                message=p["tx"],
+                published=dateparser.parse(p["cd"]).astimezone(pytz.utc),
+            )
             for p in postings
         ]
 

@@ -15,7 +15,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-from tickergadse.utils import asyncnullcontext
+import operator
+
+from tickergadse.utils import asyncnullcontext, join_dicts
 
 
 async def test_asyncnullcontext():
@@ -28,3 +30,11 @@ async def test_asyncnullcontext_noparam():
     """Check if asyncnullcontext works."""
     async with asyncnullcontext() as foo:
         assert foo is None
+
+
+async def test_join_dicts():
+    """Check if two dictionaries are joined."""
+    a = {"a": 1, "b": 2}
+    b = {"b": 3, "c": 4}
+
+    assert join_dicts(a, b, op=operator.add) == {"a": 1, "b": 5, "c": 4}
