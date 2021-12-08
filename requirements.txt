@@ -1,0 +1,4 @@
+aiohttp
+python-dateutil
+selenium
+tortoise-orm
