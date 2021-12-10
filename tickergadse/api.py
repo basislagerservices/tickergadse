@@ -24,7 +24,6 @@ __all__ = ("DerStandardAPI",)
 import asyncio
 import concurrent.futures
 import contextlib
-import datetime as dt
 import itertools
 import time
 from typing import Any, Optional, Union

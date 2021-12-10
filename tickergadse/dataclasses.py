@@ -15,6 +15,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Types for crawler results."""
+
 import datetime as dt
 from dataclasses import dataclass
 from typing import Optional
