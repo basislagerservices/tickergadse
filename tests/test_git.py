@@ -27,17 +27,17 @@ from tickergadse import git
 
 
 @pytest.fixture
-def git_repo(tmp_path):
+async def git_repo(tmp_path):
     """Create a git repository with optional files."""
     repopath = tmp_path / "upstream"
 
-    def fixture(
+    async def fixture(
         files: list[tuple[str, Union[bytes, str]]] = None,
         *,
         bare: bool = False,
     ) -> str:
         assert not files or not bare, "can't create bare repo with files"
-        git.init(repopath, bare=bare)
+        await git.init(repopath, bare=bare)
         for path, content in files or []:
             assert not os.path.isabs(path)
             if d := os.path.dirname(os.path.join(repopath, path)):
@@ -48,34 +48,34 @@ def git_repo(tmp_path):
                 fp.write(content)
 
         if files:
-            git.add(repopath, "*")
-            git.commit(repopath, "Initial commit")
+            await git.add(repopath, "*")
+            await git.commit(repopath, "Initial commit")
 
         return repopath
 
     return fixture
 
 
-def test_git_init(tmp_path):
+async def test_git_init(tmp_path):
     """Create an empty git repository."""
-    git.init(tmp_path)
+    await git.init(tmp_path)
     assert os.path.exists(tmp_path / ".git")
 
 
-def test_git_repo_fixture_empty(git_repo):
+async def test_git_repo_fixture_empty(git_repo):
     """Check if the fixture works for empty repositories."""
-    repo = git_repo()
+    repo = await git_repo()
     assert os.path.exists(repo / ".git")
 
 
-def test_git_repo_fixture_nonempty(git_repo):
+async def test_git_repo_fixture_nonempty(git_repo):
     """Check if the fixture works for repos with files."""
     files = [
         ("foofile", "foocontent"),
         ("bar/barfile", "barcontent"),
         ("bar/ham/hamfile", "hamcontent"),
     ]
-    repo = git_repo(files)
+    repo = await git_repo(files)
     assert os.path.exists(repo / ".git")
     for file, content in files:
         assert os.path.exists(repo / file)
@@ -84,26 +84,27 @@ def test_git_repo_fixture_nonempty(git_repo):
             assert fp.read() == content
 
 
-def test_git_clone_local(git_repo, tmp_path):
+async def test_git_clone_local(git_repo, tmp_path):
     """Clone from a local repository."""
-    upstream = git_repo()
-    git.clone(upstream, tmp_path / "local")
+    upstream = await git_repo()
+    await git.clone(upstream, tmp_path / "local")
     assert os.path.exists(tmp_path / "local/.git")
 
 
-def test_git_clone_remote(tmp_path):
+async def test_git_clone_remote(tmp_path):
     """Clone from a remote repository."""
-    git.clone("https://github.com/githubtraining/first-day-on-github.git", tmp_path)
+    REMOTE_REPO = "https://github.com/githubtraining/first-day-on-github.git"
+    await git.clone(REMOTE_REPO, tmp_path)
     assert os.path.exists(tmp_path / ".git")
 
 
-def test_git_push(git_repo, tmp_path):
+async def test_git_push(git_repo, tmp_path):
     """Push to a local repository."""
-    upstream = git_repo(bare=True)
+    upstream = await git_repo(bare=True)
     local = tmp_path / "local"
-    git.clone(upstream, local)
+    await git.clone(upstream, local)
     with open(local / "foofile", "w") as fp:
         fp.write("foocontent")
-    git.add(local, "*")
-    git.commit(local, "Some update")
-    git.push(local)
+    await git.add(local, "*")
+    await git.commit(local, "Some update")
+    await git.push(local)

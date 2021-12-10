@@ -17,37 +17,52 @@
 
 """Basic interface to Git."""
 
-import subprocess as sp
+import asyncio
+import shlex
+from pathlib import PosixPath
+from typing import Any, Optional, Sequence, Union
 
 
-def init(repo: str, *, bare: bool = False) -> None:
+async def _run(
+    command: Sequence[Union[str, PosixPath]],
+    *,
+    cwd: Optional[str] = None,
+) -> Any:
+    """Run a shell command."""
+    cmdstr = " ".join(shlex.quote(str(c)) for c in command)
+    proc = await asyncio.create_subprocess_shell(cmdstr, cwd=cwd)
+    await proc.communicate()
+
+
+async def init(repo: str, *, bare: bool = False) -> None:
     """Initialize an empty repository."""
-    options: list[str] = []
+    command = ["git", "init"]
     if bare:
-        options.append("--bare")
-    sp.run(["git", "init"] + options + [repo], check=True)
+        command.append("--bare")
+    command.append(repo)
+    await _run(command)
 
 
-def clone(upstream: str, local: str) -> None:
+async def clone(upstream: str, local: str) -> None:
     """Clone a repository to a local directory."""
-    sp.run(["git", "clone", upstream, local], check=True)
+    await _run(["git", "clone", upstream, local])
 
 
-def add(repo: str, *files: str) -> None:
+async def add(repo: str, *files: str) -> None:
     """Add files to the index."""
-    sp.run(["git", "add"] + list(files), cwd=repo, check=True)
+    await _run(["git", "add"] + list(files), cwd=repo)
 
 
-def commit(repo: str, message: str) -> None:
+async def commit(repo: str, message: str) -> None:
     """Commit changes to the repository."""
-    sp.run(["git", "commit", "-m", message], cwd=repo, check=True)
+    await _run(["git", "commit", "-m", message], cwd=repo)
 
 
-def push(repo: str) -> None:
+async def push(repo: str) -> None:
     """Push the changes."""
-    sp.run(["git", "push"], cwd=repo, check=True)
+    await _run(["git", "push"], cwd=repo)
 
 
-def pull(repo: str) -> None:
+async def pull(repo: str) -> None:
     """Pull changes."""
-    sp.run(["git", "pull"], cwd=repo, check=True)
+    await _run(["git", "pull"], cwd=repo)
