@@ -20,12 +20,9 @@
 
 import asyncio
 
-from aiohttp import ClientSession
-
 import pytest
 
 from tickergadse.api import DerStandardAPI
-from tickergadse.utils import asyncnullcontext
 
 
 @pytest.fixture(scope="module")

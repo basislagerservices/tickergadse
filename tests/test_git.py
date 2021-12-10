@@ -18,7 +18,6 @@
 """Tests for git interface."""
 
 import os
-import shutil
 from typing import Union
 
 import pytest

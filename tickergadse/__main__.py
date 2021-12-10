@@ -73,16 +73,6 @@ async def main() -> int:
         default="Update ranking files",
         help="commit message for the git repository",
     )
-    parser.add_argument(
-        "--github-user",
-        metavar="USER",
-        help="username for Github repositories",
-    )
-    parser.add_argument(
-        "--github-token",
-        metavar="TOKEN",
-        help="access token for Github repositories",
-    )
     args = parser.parse_args()
 
     # Create the API object and download the full thread- and posting list.
