@@ -23,7 +23,9 @@ import datetime as dt
 import logging
 import sys
 
+from . import git
 from .gadse import TickerGadse
+
 
 DESCRIPTION = (
     "Continuously update the postcount and other stats of a live ticker. "
