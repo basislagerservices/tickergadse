@@ -25,9 +25,14 @@ import sys
 
 from .gadse import TickerGadse
 
+DESCRIPTION = (
+    "Continuously update the postcount and other stats of a live ticker. "
+    "Results are committed and pushed to a Git repository. "
+    "The crawler creates a ranking.json file, which is saved in the directory "
+    "given with the --git-subdir argument."
+)
 
 TICKER_ID = 2000130527798
-
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +41,7 @@ async def main() -> int:
     """Run the crawler."""
     logging.basicConfig(format=logging.BASIC_FORMAT, level=logging.INFO)
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
         "--interval",
         default=3600,
@@ -49,7 +54,33 @@ async def main() -> int:
         type=int,
         help="time window which is reloaded (seconds)",
     )
-    parser.add_argument("--output", help="output file for the JSON ranking")
+    parser.add_argument(
+        "--git-repo",
+        metavar="REPO",
+        help="git repository where the output files are saved",
+    )
+    parser.add_argument(
+        "--git-subdir",
+        metavar="SUBDIR",
+        default=".",
+        help="subdirectory in the git repository where the output files are saved",
+    )
+    parser.add_argument(
+        "--git-message",
+        metavar="MSG",
+        default="Update ranking files",
+        help="commit message for the git repository",
+    )
+    parser.add_argument(
+        "--github-user",
+        metavar="USER",
+        help="username for Github repositories",
+    )
+    parser.add_argument(
+        "--github-token",
+        metavar="TOKEN",
+        help="access token for Github repositories",
+    )
     args = parser.parse_args()
 
     # Create the API object and download the full thread- and posting list.
