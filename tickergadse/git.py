@@ -18,20 +18,31 @@
 """Basic interface to Git."""
 
 import asyncio
+import logging
 import shlex
 from pathlib import PosixPath
 from typing import Any, Optional, Sequence, Union
+
+
+logger = logging.getLogger(__name__)
 
 
 async def _run(
     command: Sequence[Union[str, PosixPath]],
     *,
     cwd: Optional[str] = None,
-) -> Any:
+) -> tuple[str, str]:
     """Run a shell command."""
     cmdstr = " ".join(shlex.quote(str(c)) for c in command)
-    proc = await asyncio.create_subprocess_shell(cmdstr, cwd=cwd)
-    await proc.communicate()
+    logger.debug("calling: {cmdstr}")
+    proc = await asyncio.create_subprocess_shell(
+        cmdstr,
+        cwd=cwd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await proc.communicate()
+    return stdout.decode(), stderr.decode()
 
 
 async def init(repo: str, *, bare: bool = False) -> None:
