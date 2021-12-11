@@ -121,7 +121,7 @@ async def main() -> int:
 
     with dircontext as repopath:
         if repopath:
-            git.clone(args.git_repo, repopath)
+            await git.clone(args.git_repo, repopath)
 
         while True:
             await gadse.update()
@@ -136,7 +136,7 @@ async def main() -> int:
                     message=args.git_message,
                 )
                 if not args.git_no_push:
-                    git.push(repopath)
+                    await git.push(repopath)
 
             await asyncio.sleep(args.interval)
 
