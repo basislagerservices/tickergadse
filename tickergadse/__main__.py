@@ -26,6 +26,7 @@ import logging
 import os
 import sys
 import tempfile
+import time
 from typing import Any, ContextManager, Optional
 
 from . import git
@@ -124,6 +125,7 @@ async def main() -> int:
             await git.clone(args.git_repo, repopath)
 
         while True:
+            last_update = time.monotonic()
             await gadse.update()
             n = sum(gadse.ranking.values())
             logger.info(f"found {n} postings")
@@ -138,7 +140,10 @@ async def main() -> int:
                 if not args.git_no_push:
                     await git.push(repopath)
 
-            await asyncio.sleep(args.interval)
+            wait_time = args.interval - (time.monotonic() - last_update)
+            if wait_time < 0:
+                logger.warning("update takes longer than interval")
+            await asyncio.sleep(max(0, wait_time))
 
     return 0
 
