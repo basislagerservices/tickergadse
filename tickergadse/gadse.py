@@ -54,6 +54,9 @@ class TickerGadse:
         # Threads that are part of the history.
         self._retired_threads: set[Thread] = set()
 
+        # Store the last update time.
+        self._last_update = dt.datetime(1970, 1, 1)
+
     async def update(self) -> None:
         """Update the state of the crawler."""
         start_time = time.monotonic()
@@ -116,6 +119,7 @@ class TickerGadse:
         duration = time.monotonic() - start_time
         logger.info(f"update took {duration:.02f} seconds")
         self._active_postcount = active_threads
+        self._last_update = dt.datetime.utcnow()
 
     @property
     def ranking(self) -> dict[str, int]:
@@ -125,6 +129,11 @@ class TickerGadse:
             self._active_postcount,
             op=operator.add,
         )
+
+    @property
+    def last_update(self) -> dt.datetime:
+        """Get the time of the last update."""
+        return self._last_update
 
     async def _get_postings(
         self,

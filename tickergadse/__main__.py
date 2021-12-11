@@ -19,9 +19,14 @@
 
 import argparse
 import asyncio
+import contextlib
 import datetime as dt
+import json
 import logging
+import os
 import sys
+import tempfile
+from typing import Any, ContextManager, Optional
 
 from . import git
 from .gadse import TickerGadse
@@ -37,6 +42,28 @@ DESCRIPTION = (
 TICKER_ID = 2000130527798
 
 logger = logging.getLogger(__name__)
+
+
+async def commit_ranking(
+    gadse: TickerGadse,
+    repopath: str,
+    subdir: str,
+    message: str,
+) -> None:
+    """Write the ranking to the repository and commit it."""
+    result_dir = os.path.join(repopath, subdir)
+    result_path = os.path.join(result_dir, "ranking.json")
+    os.makedirs(result_dir, exist_ok=True)
+
+    # Create the desired ranking.json structure.
+    ranking: dict[str, Any] = dict()
+    ranking["date"] = gadse.last_update.strftime("%d.%m.%Y - %H:%M (UTC)")
+    ranking["users"] = [{"name": k, "postings": v} for k, v in gadse.ranking.items()]
+    with open(result_path, "w") as fp:
+        json.dump(ranking, fp, indent=4, sort_keys=True)
+
+    await git.add(repopath, "*")
+    await git.commit(repopath, message)
 
 
 async def main() -> int:
@@ -64,7 +91,6 @@ async def main() -> int:
     parser.add_argument(
         "--git-subdir",
         metavar="SUBDIR",
-        default=".",
         help="subdirectory in the git repository where the output files are saved",
     )
     parser.add_argument(
@@ -73,17 +99,46 @@ async def main() -> int:
         default="Update ranking files",
         help="commit message for the git repository",
     )
+    parser.add_argument(
+        "--git-no-push",
+        action="store_true",
+        help="don't push changes to the upstream repository",
+    )
     args = parser.parse_args()
+
+    if args.git_subdir is not None and os.path.isabs(args.git_subdir):
+        logger.error("git-subdir option has to be a relative path")
+        return 1
 
     # Create the API object and download the full thread- and posting list.
     window = dt.timedelta(seconds=args.window)
     gadse = TickerGadse(ticker_id=TICKER_ID, window=window)
 
-    while True:
-        await gadse.update()
-        n = sum(gadse.ranking.values())
-        logger.info(f"found {n} postings")
-        await asyncio.sleep(args.interval)
+    # Initialize the Git repository.
+    dircontext: ContextManager[Optional[str]] = contextlib.nullcontext()
+    if args.git_repo:
+        dircontext = tempfile.TemporaryDirectory()
+
+    with dircontext as repopath:
+        if repopath:
+            git.clone(args.git_repo, repopath)
+
+        while True:
+            await gadse.update()
+            n = sum(gadse.ranking.values())
+            logger.info(f"found {n} postings")
+
+            if repopath:
+                await commit_ranking(
+                    gadse,
+                    repopath=repopath,
+                    subdir=args.git_subdir,
+                    message=args.git_message,
+                )
+                if not args.git_no_push:
+                    git.push(repopath)
+
+            await asyncio.sleep(args.interval)
 
     return 0
 
