@@ -26,7 +26,6 @@ import logging
 import os
 import sys
 import tempfile
-import time
 from typing import Any, ContextManager, Optional
 
 from . import git
@@ -43,6 +42,13 @@ DESCRIPTION = (
 TICKER_ID = 2000130527798
 
 logger = logging.getLogger(__name__)
+
+
+async def wait_until(target: dt.datetime, *, poll_interval: int = 1) -> None:
+    """Wait until the given target time (in UTC without timezone info)."""
+    logger.info(f"waiting until {target.isoformat()}")
+    while dt.datetime.utcnow() < target:
+        await asyncio.sleep(poll_interval)
 
 
 async def commit_ranking(
@@ -125,7 +131,7 @@ async def main() -> int:
             await git.clone(args.git_repo, repopath)
 
         while True:
-            last_update = time.monotonic()
+            next_update = dt.datetime.utcnow() + dt.timedelta(seconds=args.interval)
             await gadse.update()
             n = sum(gadse.ranking.values())
             logger.info(f"found {n} postings")
@@ -140,10 +146,9 @@ async def main() -> int:
                 if not args.git_no_push:
                     await git.push(repopath)
 
-            wait_time = args.interval - (time.monotonic() - last_update)
-            if wait_time < 0:
+            if next_update < dt.datetime.utcnow():
                 logger.warning("update takes longer than interval")
-            await asyncio.sleep(max(0, wait_time))
+            await wait_until(next_update)
 
     return 0
 
