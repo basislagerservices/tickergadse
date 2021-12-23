@@ -39,7 +39,7 @@ class TickerGadse:
     """Crawler for the ticker."""
 
     def __init__(
-        self, ticker_id: int, window: dt.timedelta, *, retries: int = 5, delay: int = 2
+        self, ticker_id: int, window: dt.timedelta, *, retries: int = 5, delay: int = 10
     ) -> None:
         self._ticker_id = ticker_id
         self._window = window
