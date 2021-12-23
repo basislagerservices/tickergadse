@@ -65,7 +65,13 @@ async def commit_ranking(
     # Create the desired ranking.json structure.
     ranking: dict[str, Any] = dict()
     ranking["date"] = gadse.last_update.strftime("%d.%m.%Y - %H:%M (UTC)")
-    ranking["users"] = [{"name": k, "postings": v} for k, v in gadse.ranking.items()]
+    ranking["users"] = [
+        {
+            "name": k.name,
+            "postings": v,
+        }
+        for k, v in gadse.ranking.items()
+    ]
     with open(result_path, "w") as fp:
         json.dump(ranking, fp, indent=4, sort_keys=True)
 

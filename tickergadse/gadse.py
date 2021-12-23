@@ -29,7 +29,7 @@ from aiohttp import ClientSession
 import pytz
 
 from .api import DerStandardAPI
-from .dataclasses import Posting, Thread
+from .dataclasses import Posting, Thread, User
 from .utils import join_dicts
 
 logger = logging.getLogger(__name__)
@@ -48,8 +48,8 @@ class TickerGadse:
         self._api = DerStandardAPI()
 
         # Only save the number of postings for threads outside the window.
-        self._retired_postcount: dict[str, int] = dict()
-        self._active_postcount: dict[str, int] = dict()
+        self._retired_postcount: dict[User, int] = dict()
+        self._active_postcount: dict[User, int] = dict()
 
         # Threads that are part of the history.
         self._retired_threads: set[Thread] = set()
@@ -87,7 +87,7 @@ class TickerGadse:
             postings = await asyncio.gather(*requests)
 
         now = dt.datetime.now().astimezone(pytz.utc)
-        active_threads: dict[str, int] = dict()
+        active_threads: dict[User, int] = dict()
 
         # For logging
         active_count = 0
@@ -122,7 +122,7 @@ class TickerGadse:
         self._last_update = dt.datetime.utcnow()
 
     @property
-    def ranking(self) -> dict[str, int]:
+    def ranking(self) -> dict[User, int]:
         """Get the current ranking."""
         return join_dicts(
             self._retired_postcount,
@@ -157,9 +157,9 @@ class TickerGadse:
 
         raise ConnectionError("failed to download postings")
 
-    def _posting_stats(self, postings: list[Posting]) -> dict[str, int]:
+    def _posting_stats(self, postings: list[Posting]) -> dict[User, int]:
         """Get posting stats for a single thread."""
-        result: dict[str, int] = dict()
+        result: dict[User, int] = dict()
         for p in postings:
             result[p.user] = result.get(p.user, 0) + 1
         return result

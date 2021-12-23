@@ -20,10 +20,11 @@
 import contextlib
 import sys
 import warnings
-from typing import Any, Callable, TypeVar
+from typing import Callable, TypeVar
 
 
-T = TypeVar("T")
+KT = TypeVar("KT")
+VT = TypeVar("VT")
 
 
 @contextlib.asynccontextmanager
@@ -39,8 +40,8 @@ async def asyncnullcontext(enter_result=None):  # type: ignore
 
 
 def join_dicts(
-    a: dict[Any, T], b: dict[Any, T], *, op: Callable[[T, T], T]
-) -> dict[Any, T]:
+    a: dict[KT, VT], b: dict[KT, VT], *, op: Callable[[VT, VT], VT]
+) -> dict[KT, VT]:
     """Join two dictionaries by adding their values."""
     result = dict(a)
     for k, v in b.items():

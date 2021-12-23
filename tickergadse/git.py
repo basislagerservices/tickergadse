@@ -21,7 +21,7 @@ import asyncio
 import logging
 import shlex
 from pathlib import PosixPath
-from typing import Any, Optional, Sequence, Union
+from typing import Optional, Sequence, Union
 
 
 logger = logging.getLogger(__name__)

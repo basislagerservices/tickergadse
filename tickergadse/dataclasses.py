@@ -23,6 +23,16 @@ from typing import Optional
 
 
 @dataclass(frozen=True)
+class User:
+    """Dataclass for users."""
+
+    user_id: int
+    """ID of the user."""
+    name: str
+    """Name of the user."""
+
+
+@dataclass(frozen=True)
 class Thread:
     """Dataclass for threads."""
 
@@ -42,7 +52,7 @@ class Posting:
     """ID of this posting."""
     parent_id: Optional[int]
     """Optional ID of a parent posting."""
-    user: str
+    user: User
     """The user who posted this."""
     thread_id: int
     """ID of the thread this posting belongs to."""

@@ -38,7 +38,7 @@ from selenium import webdriver  # type: ignore
 from selenium.webdriver.chrome.options import Options  # type: ignore
 from selenium.webdriver.common.by import By  # type: ignore
 
-from .dataclasses import Posting, Thread
+from .dataclasses import Posting, Thread, User
 from .utils import asyncnullcontext
 
 
@@ -144,7 +144,7 @@ class DerStandardAPI:
             Posting(
                 posting_id=p["pid"],
                 parent_id=p["ppid"],
-                user=p["cn"],
+                user=User(user_id=p["cid"], name=p["cn"]),
                 thread_id=int(thread_id),
                 message=p["tx"],
                 published=dateparser.parse(p["cd"]).astimezone(pytz.utc),
