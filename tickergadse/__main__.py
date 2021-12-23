@@ -29,7 +29,7 @@ import tempfile
 from typing import Any, ContextManager, Optional
 
 from . import git
-from .gadse import TickerGadse
+from .gadse import TickerGadse, UpdateError
 
 
 DESCRIPTION = (
@@ -58,6 +58,7 @@ async def commit_ranking(
     message: str,
 ) -> None:
     """Write the ranking to the repository and commit it."""
+    logger.info(f"committing update to {repopath}")
     result_dir = os.path.join(repopath, subdir)
     result_path = os.path.join(result_dir, "ranking.json")
     os.makedirs(result_dir, exist_ok=True)
@@ -136,9 +137,16 @@ async def main() -> int:
         if repopath:
             await git.clone(args.git_repo, repopath)
 
+        next_update = dt.datetime.utcnow()
         while True:
-            next_update = dt.datetime.utcnow() + dt.timedelta(seconds=args.interval)
-            await gadse.update()
+            await wait_until(next_update)
+            try:
+                await gadse.update()
+            except UpdateError:
+                logger.exception("update failed")
+                await asyncio.sleep(30)
+                continue
+
             n = sum(gadse.ranking.values())
             logger.info(f"found {n} postings")
 
@@ -152,9 +160,8 @@ async def main() -> int:
                 if not args.git_no_push:
                     await git.push(repopath)
 
-            if next_update < dt.datetime.utcnow():
-                logger.warning("update takes longer than interval")
-            await wait_until(next_update)
+            while next_update < dt.datetime.utcnow():
+                next_update += dt.timedelta(seconds=args.interval)
 
     return 0
 

@@ -35,6 +35,10 @@ from .utils import join_dicts
 logger = logging.getLogger(__name__)
 
 
+class UpdateError(Exception):
+    """Error during update."""
+
+
 class TickerGadse:
     """Crawler for the ticker."""
 
@@ -72,7 +76,7 @@ class TickerGadse:
                 await asyncio.sleep(self._delay)
         else:
             logger.error("update failed")
-            return
+            raise UpdateError("cookie or thread update failed")
 
         logger.info(f"found {len(threads)} threads")
 
@@ -150,12 +154,11 @@ class TickerGadse:
                     tid,
                     client_session=client_session,
                 )
-                break
             except Exception:
                 logger.exception(f"failed to get postings for thread {tid}")
                 await asyncio.sleep(self._delay)
 
-        raise ConnectionError("failed to download postings")
+        raise UpdateError("failed to download postings")
 
     def _posting_stats(self, postings: list[Posting]) -> dict[User, int]:
         """Get posting stats for a single thread."""
