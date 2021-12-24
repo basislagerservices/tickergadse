@@ -18,7 +18,6 @@
 """Tests for the tickergadse.gadse module."""
 
 
-import asyncio
 import datetime as dt
 
 import pytest
@@ -33,7 +32,7 @@ async def gadse():
 
 
 async def test_deleted_users(gadse):
-    """Check if deleted users are distinguished in the the ranking."""
+    """Check if deleted users are distinguished in the ranking."""
     await gadse.update()
     deleted = {u.user_id for u in gadse.ranking.keys() if u.name == "gelöschter User"}
     assert len(deleted) > 1

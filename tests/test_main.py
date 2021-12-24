@@ -23,6 +23,7 @@ import os
 from unittest.mock import MagicMock
 
 from tickergadse.__main__ import commit_ranking
+from tickergadse.dataclasses import User
 
 
 async def test_commit_ranking(git_repo):
@@ -31,7 +32,10 @@ async def test_commit_ranking(git_repo):
 
     gadse = MagicMock()
     gadse.last_update = dt.datetime.utcnow()
-    gadse.ranking = {"a": 1000, "b": 2000}
+    gadse.ranking = {
+        User(user_id=0, name="a"): 1000,
+        User(user_id=1, name="b"): 2000,
+    }
 
     await commit_ranking(
         gadse,
