@@ -150,6 +150,7 @@ async def main() -> int:
         try:
             with open(os.path.expanduser(args.state_file), "rb") as fp:
                 gadse.restore_state(fp)
+            logger.info("continuing from saved state")
         except FileNotFoundError:
             logger.info("state file does not exist. starting from blank state")
         except Exception:
