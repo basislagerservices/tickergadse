@@ -21,8 +21,10 @@ import asyncio
 import datetime as dt
 import logging
 import operator
+import pickle
 import time
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import BinaryIO, Optional
 
 from aiohttp import ClientSession
 
@@ -42,24 +44,47 @@ class UpdateError(Exception):
 class TickerGadse:
     """Crawler for the ticker."""
 
+    @dataclass
+    class PersistentState:
+        """Persistent state of the crawler."""
+
+        ticker_id: int
+        """ID of the ticker to crawl."""
+
+        retired_postcount: dict[User, int] = field(default_factory=dict)
+        """Number of postings in retired threads."""
+
+        active_postcount: dict[User, int] = field(default_factory=dict)
+        """Number of postings in active threads."""
+
+        retired_threads: set[Thread] = field(default_factory=set)
+        """Retired threads."""
+
+        last_update: dt.datetime = dt.datetime(1970, 1, 1)
+        """Time of the last update."""
+
     def __init__(
         self, ticker_id: int, window: dt.timedelta, *, retries: int = 5, delay: int = 10
     ) -> None:
-        self._ticker_id = ticker_id
         self._window = window
         self._retries = retries
         self._delay = delay
         self._api = DerStandardAPI()
 
-        # Only save the number of postings for threads outside the window.
-        self._retired_postcount: dict[User, int] = dict()
-        self._active_postcount: dict[User, int] = dict()
+        self._state = TickerGadse.PersistentState(ticker_id)
 
-        # Threads that are part of the history.
-        self._retired_threads: set[Thread] = set()
+    def save_state(self, fp: BinaryIO) -> None:
+        """Save the state to a buffer."""
+        pickle.dump(self._state, fp)
 
-        # Store the last update time.
-        self._last_update = dt.datetime(1970, 1, 1)
+    def restore_state(self, fp: BinaryIO) -> None:
+        """Restore the state from a buffer."""
+        state = pickle.load(fp)
+        if not isinstance(state, TickerGadse.PersistentState):
+            raise TypeError("invalid type restored from persistent state")
+        if state.ticker_id != self._state.ticker_id:
+            raise ValueError("ticker ID of state doesn't match")
+        self._state = state
 
     async def update(self) -> None:
         """Update the state of the crawler."""
@@ -69,7 +94,7 @@ class TickerGadse:
                 # Update cookies here, because we can't really detect if we got them
                 # without seeing if a aiohttp request fails.
                 await self._api.update_cookies()
-                threads = await self._api.get_ticker_threads(self._ticker_id)
+                threads = await self._api.get_ticker_threads(self._state.ticker_id)
                 break
             except Exception:
                 logger.exception("failed to get ticker threads")
@@ -81,7 +106,7 @@ class TickerGadse:
         logger.info(f"found {len(threads)} threads")
 
         # Download postings for new or active threads.
-        update_threads = list(set(threads) - self._retired_threads)
+        update_threads = list(set(threads) - self._state.retired_threads)
         update_threads.sort(key=lambda t: t.published)
         session = self._api.session()
         requests = [
@@ -101,9 +126,9 @@ class TickerGadse:
             # number of retired postings.
             stats = self._posting_stats(p)
             if t.published < now - self._window:
-                self._retired_threads.add(t)
-                self._retired_postcount = join_dicts(
-                    self._retired_postcount,
+                self._state.retired_threads.add(t)
+                self._state.retired_postcount = join_dicts(
+                    self._state.retired_postcount,
                     stats,
                     op=operator.add,
                 )
@@ -122,22 +147,22 @@ class TickerGadse:
         )
         duration = time.monotonic() - start_time
         logger.info(f"update took {duration:.02f} seconds")
-        self._active_postcount = active_threads
-        self._last_update = dt.datetime.utcnow()
+        self._state.active_postcount = active_threads
+        self._state.last_update = dt.datetime.utcnow()
 
     @property
     def ranking(self) -> dict[User, int]:
         """Get the current ranking."""
         return join_dicts(
-            self._retired_postcount,
-            self._active_postcount,
+            self._state.retired_postcount,
+            self._state.active_postcount,
             op=operator.add,
         )
 
     @property
     def last_update(self) -> dt.datetime:
         """Get the time of the last update."""
-        return self._last_update
+        return self._state.last_update
 
     async def _get_postings(
         self,
@@ -150,7 +175,7 @@ class TickerGadse:
         for _ in range(self._retries):
             try:
                 return await self._api.get_thread_postings(
-                    self._ticker_id,
+                    self._state.ticker_id,
                     tid,
                     client_session=client_session,
                 )

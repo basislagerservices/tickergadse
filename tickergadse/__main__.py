@@ -103,6 +103,16 @@ async def main() -> int:
         help="run the crawler only once",
     )
     parser.add_argument(
+        "--continue",
+        action="store_true",
+        dest="continue_flag",
+        help="continue from a given persistent state if it exists",
+    )
+    parser.add_argument(
+        "--state-file",
+        help="path to the state file",
+    )
+    parser.add_argument(
         "--git-repo",
         metavar="REPO",
         help="git repository where the output files are saved",
@@ -129,9 +139,21 @@ async def main() -> int:
         logger.error("git-subdir option has to be a relative path")
         return 1
 
+    if args.continue_flag and not args.state_file:
+        logger.error("can't continue without given state file")
+        return 1
+
     # Create the API object and download the full thread- and posting list.
     window = dt.timedelta(seconds=args.window)
     gadse = TickerGadse(ticker_id=TICKER_ID, window=window)
+    if args.continue_flag:
+        try:
+            with open(args.state_file, "rb") as fp:
+                gadse.restore_state(fp)
+        except FileNotFoundError:
+            logger.info("state file does not exist. starting from blank state")
+        except Exception:
+            logger.exception("restoring state failed")
 
     # Initialize the Git repository.
     dircontext: ContextManager[Optional[str]] = contextlib.nullcontext()
@@ -151,6 +173,11 @@ async def main() -> int:
                 logger.exception("update failed")
                 await asyncio.sleep(30)
                 continue
+
+            # Save the state.
+            if args.state_file:
+                with open(args.state_file, "wb") as fp:
+                    gadse.save_state(fp)
 
             n = sum(gadse.ranking.values())
             logger.info(f"found {n} postings")
