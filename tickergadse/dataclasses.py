@@ -42,6 +42,10 @@ class Thread:
     """Datetime this posting was published."""
     ticker_id: int
     """ID of the ticker this thread belongs to."""
+    title: Optional[str] = None
+    """Title of the thread posting."""
+    message: Optional[str] = None
+    """Content of the thread posting."""
 
 
 @dataclass(frozen=True)
@@ -56,7 +60,9 @@ class Posting:
     """The user who posted this."""
     thread_id: int
     """ID of the thread this posting belongs to."""
-    message: str
-    """Content of the posting."""
     published: dt.datetime
     """Datetime this posting was published."""
+    title: Optional[str] = None
+    """Title of the posting."""
+    message: Optional[str] = None
+    """Content of the posting."""

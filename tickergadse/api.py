@@ -91,6 +91,8 @@ class DerStandardAPI:
                         thread_id=t["id"],
                         published=dateparser.parse(t["ctd"]).astimezone(pytz.utc),
                         ticker_id=int(ticker_id),
+                        title=t.get("hl") or None,
+                        message=t.get("cm") or None,
                     )
                     for t in (await resp.json())["rcs"]
                 ]
@@ -146,8 +148,9 @@ class DerStandardAPI:
                 parent_id=p["ppid"],
                 user=User(user_id=p["cid"], name=p["cn"]),
                 thread_id=int(thread_id),
-                message=p["tx"],
                 published=dateparser.parse(p["cd"]).astimezone(pytz.utc),
+                title=p.get("hl") or None,
+                message=p.get("tx") or None,
             )
             for p in postings
         ]
