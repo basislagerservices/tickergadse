@@ -98,6 +98,11 @@ async def main() -> int:
         help="time window which is reloaded (seconds)",
     )
     parser.add_argument(
+        "--once",
+        action="store_true",
+        help="run the crawler only once",
+    )
+    parser.add_argument(
         "--git-repo",
         metavar="REPO",
         help="git repository where the output files are saved",
@@ -159,6 +164,9 @@ async def main() -> int:
                 )
                 if not args.git_no_push:
                     await git.push(repopath)
+
+            if args.once:
+                break
 
             while next_update < dt.datetime.utcnow():
                 next_update += dt.timedelta(seconds=args.interval)
