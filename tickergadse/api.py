@@ -93,6 +93,7 @@ class DerStandardAPI:
                         ticker_id=int(ticker_id),
                         title=t.get("hl") or None,
                         message=t.get("cm") or None,
+                        user=User(user_id=t["cid"], name=t["cn"]),
                     )
                     for t in (await resp.json())["rcs"]
                 ]

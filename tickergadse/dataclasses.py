@@ -42,6 +42,8 @@ class Thread:
     """Datetime this posting was published."""
     ticker_id: int
     """ID of the ticker this thread belongs to."""
+    user: User
+    """The user who posted this."""
     title: Optional[str] = None
     """Title of the thread posting."""
     message: Optional[str] = None
