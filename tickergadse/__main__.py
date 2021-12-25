@@ -73,7 +73,7 @@ async def commit_ranking(
         }
         for k, v in gadse.ranking.items()
     ]
-    with open(result_path, "w") as fp:
+    with open(os.path.expanduser(result_path), "w") as fp:
         json.dump(ranking, fp, indent=4, sort_keys=True)
 
     await git.add(repopath, "*")
@@ -148,7 +148,7 @@ async def main() -> int:
     gadse = TickerGadse(ticker_id=TICKER_ID, window=window)
     if args.continue_flag:
         try:
-            with open(args.state_file, "rb") as fp:
+            with open(os.path.expanduser(args.state_file), "rb") as fp:
                 gadse.restore_state(fp)
         except FileNotFoundError:
             logger.info("state file does not exist. starting from blank state")
@@ -176,7 +176,7 @@ async def main() -> int:
 
             # Save the state.
             if args.state_file:
-                with open(args.state_file, "wb") as fp:
+                with open(os.path.expanduser(args.state_file), "wb") as fp:
                     gadse.save_state(fp)
 
             n = sum(gadse.ranking.values())
