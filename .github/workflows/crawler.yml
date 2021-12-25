@@ -18,8 +18,7 @@
 name: Crawler
 on:
   schedule:
-    # Run at midnight and noon every day.
-    - cron: '0 0,12 * * *'
+    - cron: '30 2,14 * * *'
   workflow_dispatch:
 
 jobs:
