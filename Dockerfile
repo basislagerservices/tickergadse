@@ -15,7 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # Install required dependencies.
 RUN apt-get update \
