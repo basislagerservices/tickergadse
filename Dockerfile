@@ -25,15 +25,16 @@ RUN apt-get update \
         git \
  && rm -rf /var/lib/apt/lists/*
 
-# Install requirements and the tickergadse package.
-COPY requirements.txt /app/
-RUN pip install -r /app/requirements.txt
+# Install the tickergadse package
+COPY requirements.txt setup.py /app/
 COPY tickergadse /app/tickergadse
+RUN pip install /app
+RUN rm -rf /app
 
 # Run everything as tickeruser
 RUN useradd -ms /bin/bash tickeruser
 USER tickeruser
-WORKDIR /app
+WORKDIR /home/tickeruser
 
 # Setup credentials for Github.
 ARG github_name
@@ -50,4 +51,4 @@ RUN if [ -n "$github_name" ] && [ -n "$github_email" ] && [ -n "$github_token" ]
         exit 1; \
     fi
 
-ENTRYPOINT ["python", "-m", "tickergadse"]
+ENTRYPOINT ["tickergadse-crawler"]

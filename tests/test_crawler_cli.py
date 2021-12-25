@@ -15,14 +15,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Tests for the tickergadse.__main__ module."""
+"""Tests for the tickergadse.crawler_cli module."""
 
 
 import datetime as dt
 import os
 from unittest.mock import MagicMock
 
-from tickergadse.__main__ import commit_ranking
+from tickergadse.crawler_cli import commit_ranking
 from tickergadse.dataclasses import User
 
 

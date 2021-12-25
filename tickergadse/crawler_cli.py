@@ -201,5 +201,10 @@ async def main() -> int:
     return 0
 
 
+def entrypoint() -> int:
+    """Run the main crawler function in asyncio."""
+    return asyncio.run(main())
+
+
 if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))
+    sys.exit(entrypoint())
