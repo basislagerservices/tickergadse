@@ -35,7 +35,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: '~/crawler-state.pickle'
-          key: '${{runner.os}}-crawler-state'
+          key: '${{runner.os}}-crawler-state-v${{secrets.CACHE_VERSION}}'
 
       - name: 'Install dependencies'
         run: sudo apt-get install -y chromium-browser chromium-chromedriver

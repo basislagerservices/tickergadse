@@ -17,3 +17,6 @@ docker build \
 
 The crawler action requires a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) to push to the data repository.
 Set or update the `REPO_TOKEN` secret in the repository settings.
+
+Sometimes it is necessary to invalidate the cache.
+This can be done by changing the `CACHE_VERSION` secret in the repository.
