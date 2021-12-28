@@ -51,4 +51,5 @@ RUN if [ -n "$github_name" ] && [ -n "$github_email" ] && [ -n "$github_token" ]
         exit 1; \
     fi
 
-ENTRYPOINT ["tickergadse-crawler"]
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
