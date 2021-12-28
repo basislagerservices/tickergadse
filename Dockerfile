@@ -24,6 +24,9 @@ RUN apt-get update \
         chromium-driver \
         git \
         pandoc \
+        texlive-latex-base \
+        texlive-latex-extra \
+        texlive-latex-recommended \
  && rm -rf /var/lib/apt/lists/*
 
 # Install the tickergadse package
