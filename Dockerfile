@@ -23,6 +23,7 @@ RUN apt-get update \
         chromium \
         chromium-driver \
         git \
+        pandoc \
  && rm -rf /var/lib/apt/lists/*
 
 # Install the tickergadse package
