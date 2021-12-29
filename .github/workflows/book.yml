@@ -50,9 +50,9 @@ jobs:
       - name: 'Install package'
         run: pip install .
 
-      - name: 'Run book generator'
+      - name: 'Run book generator for Unsin(n)kable III'
         run: |
           tickergadse-book \
             --git-repo 'https://github.com/basislagerservices/data.git' \
-            --output book/logbook.pdf \
-            --output book/logbook.epub
+            --output books/unsinnkable.pdf \
+            --output books/unsinnkable.epub
