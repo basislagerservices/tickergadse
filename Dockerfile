@@ -22,12 +22,17 @@ RUN apt-get update \
  && apt-get install -y \
         chromium \
         chromium-driver \
+        curl \
         git \
-        pandoc \
         texlive-latex-base \
         texlive-latex-extra \
         texlive-latex-recommended \
  && rm -rf /var/lib/apt/lists/*
+
+# Install pandoc from Github.
+RUN curl -L -o /tmp/pandoc.deb 'https://github.com/jgm/pandoc/releases/download/2.16.2/pandoc-2.16.2-1-amd64.deb' \
+ && dpkg -i /tmp/pandoc.deb \
+ && rm -f /tmp/pandoc.deb
 
 # Install the tickergadse package
 COPY requirements.txt setup.py /app/
