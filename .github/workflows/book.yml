@@ -57,3 +57,11 @@ jobs:
             --book logbook \
             --output books/unsinnkable.pdf \
             --output books/unsinnkable.epub
+
+      - name: 'Run book generator for Raumschiff Ersterpreis'
+        run: |
+          tickergadse-book \
+            --git-repo 'https://github.com/basislagerservices/data.git' \
+            --book ersterpreis \
+            --output books/ersterpreis.pdf \
+            --output books/ersterpreis.epub

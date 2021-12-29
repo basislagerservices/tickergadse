@@ -60,8 +60,21 @@ class Logbook(Book):
         )
 
 
+class Ersterpreis(Book):
+    """Raumschiff Ersterpreis book."""
+
+    title = "Raumschiff Ersterpreis"
+    subtitle = "Geschichten aus dem Leben von wahnsinnigen AstronautInnen"
+    author = "Lord Suggs"
+
+    def is_book_thread(self, thread: Thread) -> bool:
+        """Determine if a thread is a logbook entry."""
+        return bool(thread.title and thread.message and "Ersterpreis" in thread.title)
+
+
 BOOKS: dict[str, Type[Book]] = {
     "logbook": Logbook,
+    "ersterpreis": Ersterpreis,
 }
 
 
