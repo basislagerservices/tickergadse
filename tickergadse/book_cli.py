@@ -22,13 +22,13 @@ import asyncio
 import contextlib
 import logging
 import os
-import subprocess
 import sys
 import tempfile
 from typing import ContextManager, Optional
 
 from . import git
 from .api import DerStandardAPI
+from .book import Book
 from .dataclasses import Thread
 
 
@@ -41,6 +41,23 @@ DESCRIPTION = (
 TICKER_ID = 2000130527798
 
 logger = logging.getLogger(__name__)
+
+
+class Logbook(Book):
+    """Unsin(n)kable III Logbook."""
+
+    title = "Unsin(n)kable III"
+    subtitle = "Geschichten aus dem Leben von wahnsinnigen Seeleuten"
+    author = "angmar hexenkönig"
+
+    def is_book_thread(self, thread: Thread) -> bool:
+        """Determine if a thread is a logbook entry."""
+        return bool(
+            thread.title
+            and thread.message
+            and "Unsin(n)kable" in thread.title
+            and ("Logbuch" in thread.title or "Notizbuch" in thread.title)
+        )
 
 
 async def main() -> int:
@@ -94,18 +111,8 @@ async def main() -> int:
 
     # Filter threads with logbook entries.
     # TODO: Move this into a configuration file.
-    def is_logbook_thread(thread: Thread) -> bool:
-        """Determine if a thread is a logbook entry."""
-        return bool(
-            thread.title
-            and thread.message
-            and "Unsin(n)kable" in thread.title
-            and ("Logbuch" in thread.title or "Notizbuch" in thread.title)
-        )
-
-    bookthreads = [t for t in threads if is_logbook_thread(t)]
-    bookthreads.sort(key=lambda t: t.published)
-    logger.info(f"found {len(bookthreads)} logbook entries")
+    book = Logbook(threads)
+    logger.info(f"found {len(book.threads)} logbook entries")
 
     dircontext: ContextManager[Optional[str]] = contextlib.nullcontext()
     if args.git_repo:
@@ -113,25 +120,12 @@ async def main() -> int:
 
     # Create the book chapters and call pandoc to generate the output products.
     with tempfile.TemporaryDirectory() as tempdir, dircontext as repopath:
-        for i, thread in enumerate(bookthreads):
+        for i, thread in enumerate(book.threads):
             with open(os.path.join(tempdir, f"entry_{i}.md"), "w") as fp:
                 fp.write("\n\\newpage")
                 fp.write(f"# {thread.title}\n\n")
                 assert thread.message is not None
                 fp.write(thread.message)
-
-        # TODO: Move this into a configuration file and get authors from downloaded
-        #       threads.
-        meta = {
-            "title": "Unsin(n)kable III",
-            "subtitle": "Geschichten aus dem Leben von wahnsinnigen Seeleuten",
-            "papersize": "a5",
-            "author": "angmar hexenkönig",
-            "documentclass": "scrartcl",
-        }
-        metaopts = []
-        for k, v in meta.items():
-            metaopts.extend(["-M", f"{k}={v}"])
 
         # Set the output paths, clone the repo and create the necessary subdirectories
         # in the cloned repository.
@@ -143,11 +137,8 @@ async def main() -> int:
                 os.makedirs(os.path.dirname(output), exist_ok=True)
 
         # Generate the book
-        entries = [
-            os.path.join(tempdir, f"entry_{i}.md") for i in range(len(bookthreads))
-        ]
         for output in outputs:
-            subprocess.run(["pandoc"] + metaopts + ["-o", output] + entries)
+            book.create_book(output)
 
         # Commit changes and push them.
         if repopath:
