@@ -126,8 +126,8 @@ async def main() -> int:
             "title": "Unsin(n)kable III",
             "subtitle": "Geschichten aus dem Leben von wahnsinnigen Seeleuten",
             "papersize": "a5",
-            "geometry": "margin=2cm",
             "author": "angmar hexenkönig",
+            "documentclass": "scrartcl",
         }
         metaopts = []
         for k, v in meta.items():
