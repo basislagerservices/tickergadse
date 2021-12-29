@@ -24,7 +24,7 @@ import logging
 import os
 import sys
 import tempfile
-from typing import ContextManager, Optional
+from typing import ContextManager, Optional, Type
 
 from . import git
 from .api import DerStandardAPI
@@ -60,6 +60,11 @@ class Logbook(Book):
         )
 
 
+BOOKS: dict[str, Type[Book]] = {
+    "logbook": Logbook,
+}
+
+
 async def main() -> int:
     """Run the book generator."""
     logging.basicConfig(format=logging.BASIC_FORMAT, level=logging.INFO)
@@ -70,6 +75,13 @@ async def main() -> int:
         "-o",
         action="append",
         help="output file",
+    )
+    parser.add_argument(
+        "--book",
+        "-b",
+        required=True,
+        choices=BOOKS.keys(),
+        help="type of book to generate",
     )
     parser.add_argument(
         "--git-repo",
@@ -111,7 +123,7 @@ async def main() -> int:
 
     # Filter threads with logbook entries.
     # TODO: Move this into a configuration file.
-    book = Logbook(threads)
+    book = BOOKS[args.book](threads)
     logger.info(f"found {len(book.threads)} logbook entries")
 
     dircontext: ContextManager[Optional[str]] = contextlib.nullcontext()

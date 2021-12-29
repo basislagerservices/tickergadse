@@ -54,5 +54,6 @@ jobs:
         run: |
           tickergadse-book \
             --git-repo 'https://github.com/basislagerservices/data.git' \
+            --book logbook \
             --output books/unsinnkable.pdf \
             --output books/unsinnkable.epub
