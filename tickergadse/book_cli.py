@@ -120,7 +120,6 @@ async def main() -> int:
     parser.add_argument(
         "--git-message",
         metavar="MSG",
-        default="Update books",
         help="commit message for the git repository",
     )
     parser.add_argument(
