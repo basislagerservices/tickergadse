@@ -114,6 +114,9 @@ async def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.git_message is None:
+        args.git_message = f"Update {args.book} books"
+
     if args.git_repo is not None and any(os.path.isabs(p) for p in args.output):
         logger.error("output paths have to be relative when git repo is specified")
         return 1
