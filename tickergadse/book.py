@@ -90,9 +90,18 @@ class Book(ABC):
                 with open(entrypath, "w") as fp:
                     fp.write("\n\\newpage")
                     fp.write(f"# {thread.title}\n\n")
-                    assert thread.message is not None
-                    fp.write(thread.message)
+                    message = self.format_message(thread)
+                    assert message is not None
+                    fp.write(message)
 
             # TODO: Use asyncio for this. Not really necessary, but since this is
             #       called from a coroutine, it would make more sense.
             subprocess.run(["pandoc"] + metaopts + ["-o", path] + entries)
+
+    def format_message(self, thread: Thread) -> Optional[str]:
+        """Reformat a message before writing.
+
+        Some postings are poorly formatted, so we process them before writing. Takes
+        the thread as an argument and returns the message in markdown.
+        """
+        return thread.message

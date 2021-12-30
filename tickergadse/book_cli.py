@@ -71,6 +71,22 @@ class Ersterpreis(Book):
         """Determine if a thread is a logbook entry."""
         return bool(thread.title and thread.message and "Ersterpreis" in thread.title)
 
+    def format_message(self, thread: Thread) -> Optional[str]:
+        """Convert # in some threads to bullet points."""
+        if thread.thread_id == 1000249559:
+            assert thread.message is not None
+            return "".join(
+                self.reformat_line(line)
+                for line in thread.message.splitlines(keepends=True)
+            )
+        return thread.message
+
+    def reformat_line(self, line: str) -> str:
+        """Convert # at the beginning of the line to *."""
+        if line.startswith("# "):
+            return "* " + line[2:]
+        return line
+
 
 BOOKS: dict[str, Type[Book]] = {
     "logbook": Logbook,
