@@ -52,12 +52,18 @@ class Logbook(Book):
 
     def is_book_thread(self, thread: Thread) -> bool:
         """Determine if a thread is a logbook entry."""
-        return bool(
-            thread.title
-            and thread.message
-            and "Unsin(n)kable" in thread.title
-            and ("Logbuch" in thread.title or "Notizbuch" in thread.title)
-        )
+        if not thread.title or not thread.message:
+            return False
+
+        if "Unsin(n)kable" in thread.title and (
+            "Logbuch" in thread.title or "Notizbuch" in thread.title
+        ):
+            return True
+
+        if "Vorläufiger Abschlussbericht der Hafenkommandantur Havanna" in thread.title:
+            return True
+
+        return False
 
 
 class Ersterpreis(Book):
