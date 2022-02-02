@@ -116,7 +116,7 @@ class TickerGadse:
             logger.error("update failed")
             raise UpdateError("cookie or thread update failed")
 
-        logger.info(f"found {len(threads)} threads")
+        logger.info(f"found {len(threads)} threads in ticker {state.ticker_id}")
 
         # Download postings for new or active threads.
         update_threads = list(set(threads) - state.retired_threads)
@@ -156,7 +156,7 @@ class TickerGadse:
 
         logger.info(
             f"finished update with {retired_count} newly retired and {active_count} "
-            "active threads"
+            f"active threads for ticker {state.ticker_id}"
         )
         duration = time.monotonic() - start_time
         logger.info(f"update took {duration:.02f} seconds")
