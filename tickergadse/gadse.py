@@ -17,6 +17,7 @@
 
 """Crawler logic for a single ticker."""
 
+from __future__ import annotations
 import asyncio
 import datetime as dt
 import logging
@@ -24,7 +25,7 @@ import operator
 import pickle
 import time
 from dataclasses import dataclass, field
-from typing import BinaryIO, Optional
+from typing import BinaryIO, Iterable, Optional
 
 from aiohttp import ClientSession
 
@@ -42,7 +43,7 @@ class UpdateError(Exception):
 
 
 class TickerGadse:
-    """Crawler for the ticker."""
+    """Crawler for one or multiple ticker."""
 
     @dataclass
     class PersistentState:
@@ -64,37 +65,49 @@ class TickerGadse:
         """Time of the last update."""
 
     def __init__(
-        self, ticker_id: int, window: dt.timedelta, *, retries: int = 5, delay: int = 10
+        self,
+        ticker_ids: Iterable[int],
+        window: dt.timedelta,
+        *,
+        retries: int = 5,
+        delay: int = 10,
     ) -> None:
         self._window = window
         self._retries = retries
         self._delay = delay
         self._api = DerStandardAPI()
 
-        self._state = TickerGadse.PersistentState(ticker_id)
+        self._states = tuple(TickerGadse.PersistentState(i) for i in ticker_ids)
 
     def save_state(self, fp: BinaryIO) -> None:
         """Save the state to a buffer."""
-        pickle.dump(self._state, fp)
+        pickle.dump(self._states, fp)
 
     def restore_state(self, fp: BinaryIO) -> None:
         """Restore the state from a buffer."""
-        state = pickle.load(fp)
-        if not isinstance(state, TickerGadse.PersistentState):
+        states = pickle.load(fp)
+        if not all(isinstance(s, TickerGadse.PersistentState) for s in states):
             raise TypeError("invalid type restored from persistent state")
-        if state.ticker_id != self._state.ticker_id:
-            raise ValueError("ticker ID of state doesn't match")
-        self._state = state
+
+        if {s.ticker_id for s in states} != {s.ticker_id for s in self._states}:
+            raise ValueError("ticker IDs of state don't match")
+
+        self._states = states
 
     async def update(self) -> None:
         """Update the state of the crawler."""
+        for s in self._states:
+            await self._update(s)
+
+    async def _update(self, state: TickerGadse.PersistentState) -> None:
+        """Update the state of a single crawler."""
         start_time = time.monotonic()
         for _ in range(self._retries):
             try:
                 # Update cookies here, because we can't really detect if we got them
                 # without seeing if a aiohttp request fails.
                 await self._api.update_cookies()
-                threads = await self._api.get_ticker_threads(self._state.ticker_id)
+                threads = await self._api.get_ticker_threads(state.ticker_id)
                 break
             except Exception:
                 logger.exception("failed to get ticker threads")
@@ -106,7 +119,7 @@ class TickerGadse:
         logger.info(f"found {len(threads)} threads")
 
         # Download postings for new or active threads.
-        update_threads = list(set(threads) - self._state.retired_threads)
+        update_threads = list(set(threads) - state.retired_threads)
         update_threads.sort(key=lambda t: t.published)
         session = self._api.session()
         requests = [
@@ -126,9 +139,9 @@ class TickerGadse:
             # number of retired postings.
             stats = self._posting_stats(p)
             if t.published < now - self._window:
-                self._state.retired_threads.add(t)
-                self._state.retired_postcount = join_dicts(
-                    self._state.retired_postcount,
+                state.retired_threads.add(t)
+                state.retired_postcount = join_dicts(
+                    state.retired_postcount,
                     stats,
                     op=operator.add,
                 )
@@ -147,22 +160,25 @@ class TickerGadse:
         )
         duration = time.monotonic() - start_time
         logger.info(f"update took {duration:.02f} seconds")
-        self._state.active_postcount = active_threads
-        self._state.last_update = dt.datetime.utcnow()
+        state.active_postcount = active_threads
+        state.last_update = dt.datetime.utcnow()
 
     @property
     def ranking(self) -> dict[User, int]:
         """Get the current ranking."""
-        return join_dicts(
-            self._state.retired_postcount,
-            self._state.active_postcount,
-            op=operator.add,
-        )
+        ranking: dict[User, int] = dict()
+        for state in self._states:
+            ranking = join_dicts(ranking, state.retired_postcount, op=operator.add)
+            ranking = join_dicts(ranking, state.active_postcount, op=operator.add)
+        return ranking
 
     @property
     def last_update(self) -> dt.datetime:
-        """Get the time of the last update."""
-        return self._state.last_update
+        """Get the time of the last update.
+
+        This is only for statistics, so we simply return the latest update.
+        """
+        return max(s.last_update for s in self._states)
 
     async def _get_postings(
         self,
@@ -171,16 +187,18 @@ class TickerGadse:
         client_session: Optional[ClientSession] = None,
     ) -> list[Posting]:
         """Get postings for a given thread."""
-        tid = thread.thread_id
         for _ in range(self._retries):
             try:
                 return await self._api.get_thread_postings(
-                    self._state.ticker_id,
-                    tid,
+                    thread.ticker_id,
+                    thread.thread_id,
                     client_session=client_session,
                 )
             except Exception:
-                logger.exception(f"failed to get postings for thread {tid}")
+                logger.exception(
+                    f"failed to get postings for thread {thread.thread_id}"
+                    f" in ticker {thread.ticker_id}"
+                )
                 await asyncio.sleep(self._delay)
 
         raise UpdateError("failed to download postings")

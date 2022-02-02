@@ -39,7 +39,7 @@ DESCRIPTION = (
     "given with the --git-subdir argument."
 )
 
-TICKER_ID = 2000130527798
+TICKER_IDS = (2000130527798,)
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ async def main() -> int:
 
     # Create the API object and download the full thread- and posting list.
     window = dt.timedelta(seconds=args.window)
-    gadse = TickerGadse(ticker_id=TICKER_ID, window=window)
+    gadse = TickerGadse(ticker_ids=TICKER_IDS, window=window)
     if args.continue_flag:
         try:
             with open(os.path.expanduser(args.state_file), "rb") as fp:

@@ -28,7 +28,7 @@ from tickergadse.gadse import TickerGadse
 @pytest.fixture
 async def gadse():
     """Crawler for an old live ticker."""
-    return TickerGadse(ticker_id=1336696633613, window=dt.timedelta(days=1))
+    return TickerGadse(ticker_ids=[1336696633613], window=dt.timedelta(days=1))
 
 
 async def test_deleted_users(gadse):
