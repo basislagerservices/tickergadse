@@ -19,14 +19,11 @@
 
 import argparse
 import asyncio
-import contextlib
 import logging
 import os
 import sys
-import tempfile
-from typing import ContextManager, Optional, Type
+from typing import Optional, Type
 
-from . import git
 from .api import DerStandardAPI
 from .book import Book
 from .dataclasses import Thread
@@ -118,29 +115,7 @@ async def main() -> int:
         choices=BOOKS.keys(),
         help="type of book to generate",
     )
-    parser.add_argument(
-        "--git-repo",
-        metavar="REPO",
-        help="git repository where the output files are saved",
-    )
-    parser.add_argument(
-        "--git-message",
-        metavar="MSG",
-        help="commit message for the git repository",
-    )
-    parser.add_argument(
-        "--git-no-push",
-        action="store_true",
-        help="don't push changes to the upstream repository",
-    )
     args = parser.parse_args()
-
-    if args.git_message is None:
-        args.git_message = f"Update {args.book} books"
-
-    if args.git_repo is not None and any(os.path.isabs(p) for p in args.output):
-        logger.error("output paths have to be relative when git repo is specified")
-        return 1
 
     # Get threads in the ticker.
     api = DerStandardAPI()
@@ -163,39 +138,9 @@ async def main() -> int:
     book = BOOKS[args.book](threads)
     logger.info(f"found {len(book.threads)} logbook entries")
 
-    dircontext: ContextManager[Optional[str]] = contextlib.nullcontext()
-    if args.git_repo:
-        dircontext = tempfile.TemporaryDirectory()
-
-    # Create the book chapters and call pandoc to generate the output products.
-    with tempfile.TemporaryDirectory() as tempdir, dircontext as repopath:
-        for i, thread in enumerate(book.threads):
-            with open(os.path.join(tempdir, f"entry_{i}.md"), "w") as fp:
-                fp.write("\n\\newpage")
-                fp.write(f"# {thread.title}\n\n")
-                assert thread.message is not None
-                fp.write(thread.message)
-
-        # Set the output paths, clone the repo and create the necessary subdirectories
-        # in the cloned repository.
-        outputs = [os.path.abspath(output) for output in args.output]
-        if repopath:
-            await git.clone(args.git_repo, repopath)
-            outputs = [os.path.join(repopath, output) for output in args.output]
-            for output in outputs:
-                os.makedirs(os.path.dirname(output), exist_ok=True)
-
-        # Generate the book
-        for output in outputs:
-            book.create_book(output)
-
-        # Commit changes and push them.
-        if repopath:
-            await git.add(repopath, "*")
-            await git.commit(repopath, args.git_message)
-
-            if not args.git_no_push:
-                await git.push(repopath)
+    # Generate the books.
+    for output in [os.path.abspath(p) for p in args.output]:
+        book.create_book(output)
 
     return 0
 

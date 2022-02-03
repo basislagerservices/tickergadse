@@ -16,32 +16,3 @@
 #
 
 """Tests for the tickergadse.crawler_cli module."""
-
-
-import datetime as dt
-import os
-from unittest.mock import MagicMock
-
-from tickergadse.crawler_cli import commit_ranking
-from tickergadse.dataclasses import User
-
-
-async def test_commit_ranking(git_repo):
-    """Check if we can commit a ranking to a repository."""
-    repopath = await git_repo()
-
-    gadse = MagicMock()
-    gadse.last_update = dt.datetime.utcnow()
-    gadse.ranking = {
-        User(user_id=0, name="a"): 1000,
-        User(user_id=1, name="b"): 2000,
-    }
-
-    await commit_ranking(
-        gadse,
-        repopath=repopath,
-        subdir="foo/bar",
-        message="some message",
-    )
-    resultpath = os.path.join(repopath, "foo/bar/ranking.json")
-    assert os.path.exists(resultpath)
