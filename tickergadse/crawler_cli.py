@@ -127,7 +127,7 @@ async def main() -> int:
 
         # Write ranking file.
         ranking = dict(
-            data=gadse.last_update.strftime("%d.%m.%Y - %H:%M (UTC)"),
+            date=gadse.last_update.strftime("%d.%m.%Y - %H:%M (UTC)"),
             users=[{"name": k.name, "postings": v} for k, v in gadse.ranking.items()],
         )
         os.makedirs(os.path.dirname(args.output), exist_ok=True)
