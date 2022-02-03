@@ -19,8 +19,8 @@
 
 
 import os
-import subprocess
 import shutil
+import subprocess
 import tempfile
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional, Tuple

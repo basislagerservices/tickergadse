@@ -26,7 +26,7 @@ import concurrent.futures
 import contextlib
 import itertools
 import time
-from typing import Any, Optional, Union
+from typing import Any, AsyncContextManager, Optional, Union
 
 from aiohttp import ClientSession
 
@@ -39,7 +39,6 @@ from selenium.webdriver.chrome.options import Options  # type: ignore
 from selenium.webdriver.common.by import By  # type: ignore
 
 from .dataclasses import Posting, Thread, User
-from .utils import asyncnullcontext
 
 
 @contextlib.contextmanager
@@ -83,7 +82,13 @@ class DerStandardAPI:
     ) -> list[Thread]:
         """Get a list of thread IDs of a ticker."""
         url = self.URL(f"/jetzt/api/redcontent?id={ticker_id}&ps=1000000")
-        context = asyncnullcontext(client_session) if client_session else self.session()
+
+        context: AsyncContextManager[ClientSession]
+        if client_session:
+            context = contextlib.nullcontext(client_session)
+        else:
+            context = self.session()
+
         async with context as session:
             async with session.get(url) as resp:
                 return [
@@ -112,7 +117,13 @@ class DerStandardAPI:
         )
         if skip_to:
             url += f"&skipToPostingId={skip_to}"
-        context = asyncnullcontext(client_session) if client_session else self.session()
+
+        context: AsyncContextManager[ClientSession]
+        if client_session:
+            context = contextlib.nullcontext(client_session)
+        else:
+            context = self.session()
+
         async with context as session:
             async with session.get(url) as resp:
                 return await resp.json()

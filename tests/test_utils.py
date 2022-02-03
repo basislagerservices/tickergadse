@@ -19,19 +19,7 @@
 
 import operator
 
-from tickergadse.utils import asyncnullcontext, join_dicts
-
-
-async def test_asyncnullcontext():
-    """Check if asyncnullcontext works."""
-    async with asyncnullcontext("foo") as foo:
-        assert foo == "foo"
-
-
-async def test_asyncnullcontext_noparam():
-    """Check if asyncnullcontext works."""
-    async with asyncnullcontext() as foo:
-        assert foo is None
+from tickergadse.utils import join_dicts
 
 
 async def test_join_dicts():

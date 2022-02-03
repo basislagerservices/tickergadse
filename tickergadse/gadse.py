@@ -18,6 +18,7 @@
 """Crawler logic for a single ticker."""
 
 from __future__ import annotations
+
 import asyncio
 import datetime as dt
 import logging

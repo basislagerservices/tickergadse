@@ -17,26 +17,11 @@
 
 """Common utils for other modules."""
 
-import contextlib
-import sys
-import warnings
 from typing import Callable, TypeVar
 
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")
-
-
-@contextlib.asynccontextmanager
-async def asyncnullcontext(enter_result=None):  # type: ignore
-    """Create a nullcontext for 'async with' statements."""
-    version = (sys.version_info.major, sys.version_info.minor)
-    if version >= (3, 10):
-        warnings.warn(
-            "'asyncnullcontext' should be replaced with 'contextlib.nullcontext'",
-            DeprecationWarning,
-        )
-    yield enter_result
 
 
 def join_dicts(
