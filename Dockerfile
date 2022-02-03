@@ -45,20 +45,5 @@ RUN useradd -ms /bin/bash tickeruser
 USER tickeruser
 WORKDIR /home/tickeruser
 
-# Setup credentials for Github.
-ARG github_name
-ARG github_email
-ARG github_token
-RUN if [ -n "$github_name" ] && [ -n "$github_email" ] && [ -n "$github_token" ]; then \
-        git config --global user.name "${github_name}"; \
-        git config --global user.email "${github_email}"; \
-        git config --global url."https://${github_token}:@github.com/".insteadOf "https://github.com/"; \
-    elif [ -n "$github_name" ] || [ -n "$github_email" ] || [ -n "$github_token" ]; then \
-        echo "================================================================"; \
-        echo "[ERROR] Configuration requires either all Github options or none"; \
-        echo "================================================================"; \
-        exit 1; \
-    fi
-
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
