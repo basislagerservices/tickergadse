@@ -20,6 +20,7 @@
 
 import os
 import subprocess
+import shutil
 import tempfile
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional, Tuple
@@ -94,9 +95,17 @@ class Book(ABC):
                     assert message is not None
                     fp.write(message)
 
+            # Create in a temporary file so we don't create unnecessary directories
+            # in case this fails.
+            outfile = tempfile.mktemp(suffix=fmt)
+
             # TODO: Use asyncio for this. Not really necessary, but since this is
             #       called from a coroutine, it would make more sense.
-            subprocess.run(["pandoc"] + metaopts + ["-o", path] + entries)
+            subprocess.run(["pandoc"] + metaopts + ["-o", outfile] + entries)
+
+            # Create the tree and move the output file.
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            shutil.move(outfile, path)
 
     def format_message(self, thread: Thread) -> Optional[str]:
         """Reformat a message before writing.

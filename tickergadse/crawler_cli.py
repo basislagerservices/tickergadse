@@ -92,7 +92,7 @@ async def main() -> int:
     gadse = TickerGadse(ticker_ids=TICKER_IDS, window=window)
     if args.continue_flag:
         try:
-            with open(os.path.expanduser(args.state_file), "rb") as fpb:
+            with open(args.state_file, "rb") as fpb:
                 gadse.restore_state(fpb)
             logger.info("continuing from saved state")
         except FileNotFoundError:
@@ -112,15 +112,21 @@ async def main() -> int:
 
         # Save the state.
         if args.state_file:
-            with open(os.path.expanduser(args.state_file), "wb") as fpb:
+            os.makedirs(os.path.dirname(args.state_file), exist_ok=True)
+            with open(args.state_file, "wb") as fpb:
                 gadse.save_state(fpb)
 
         n = sum(gadse.ranking.values())
         logger.info(f"found {n} postings")
 
         # Write ranking file.
+        ranking = dict(
+            data=gadse.last_update.strftime("%d.%m.%Y - %H:%M (UTC)"),
+            users=[{"name": k.name, "postings": v} for k, v in gadse.ranking.items()],
+        )
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
         with open(args.output, "w") as fpt:
-            json.dump(gadse.ranking, fpt, indent=4, sort_keys=True)
+            json.dump(ranking, fpt, indent=4, sort_keys=True)
 
         if args.once:
             break
