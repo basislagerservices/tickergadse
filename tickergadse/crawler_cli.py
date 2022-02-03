@@ -30,10 +30,8 @@ from .gadse import TickerGadse, UpdateError
 
 DESCRIPTION = (
     "Continuously update the postcount and other stats of a live ticker. "
-    "Results are committed and pushed to a Git repository."
+    "Results are written to a file."
 )
-
-TICKER_IDS = (2000130527798,)
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +48,14 @@ async def main() -> int:
     logging.basicConfig(format=logging.BASIC_FORMAT, level=logging.INFO)
 
     parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser.add_argument(
+        "--ticker-id",
+        metavar="ID",
+        action="append",
+        type=int,
+        required=True,
+        help="ID of the ticker (allowed multiple times)",
+    )
     parser.add_argument(
         "--interval",
         default=3600,
@@ -89,7 +95,7 @@ async def main() -> int:
 
     # Create the API object and download the full thread- and posting list.
     window = dt.timedelta(seconds=args.window)
-    gadse = TickerGadse(ticker_ids=TICKER_IDS, window=window)
+    gadse = TickerGadse(ticker_ids=args.ticker_id, window=window)
     if args.continue_flag:
         try:
             with open(args.state_file, "rb") as fpb:

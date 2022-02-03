@@ -29,13 +29,8 @@ from .book import Book
 from .dataclasses import Thread
 
 
-DESCRIPTION = (
-    "Generate a book from logbook entries."
-    "Output paths are absolute if no Git repository is given, "
-    "or relative to the Git repository if one is given."
-)
+DESCRIPTION = "Generate a book from logbook entries."
 
-TICKER_ID = 2000130527798
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +98,14 @@ async def main() -> int:
 
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
+        "--ticker-id",
+        metavar="ID",
+        action="append",
+        type=int,
+        required=True,
+        help="ID of the ticker (allowed multiple times)",
+    )
+    parser.add_argument(
         "--output",
         "-o",
         action="append",
@@ -119,17 +122,19 @@ async def main() -> int:
 
     # Get threads in the ticker.
     api = DerStandardAPI()
-    for _ in range(5):
-        try:
-            await api.update_cookies()
-            threads = await api.get_ticker_threads(TICKER_ID)
-            break
-        except Exception:
-            logger.exception("downloading ticker threads failed")
-            await asyncio.sleep(5)
-    else:
-        logger.error("downloading ticker threads failed")
-        return 1
+    threads: list[Thread] = []
+    for tid in args.ticker_id:
+        for _ in range(5):
+            try:
+                await api.update_cookies()
+                threads += await api.get_ticker_threads(tid)
+                break
+            except Exception:
+                logger.exception("downloading ticker threads failed")
+                await asyncio.sleep(5)
+        else:
+            logger.error("downloading ticker threads failed")
+            return 1
 
     logger.info(f"found {len(threads)} threads")
 
