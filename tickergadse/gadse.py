@@ -77,7 +77,7 @@ class TickerGadse:
         self._delay = delay
         self._api = DerStandardAPI()
 
-        self._states = tuple(TickerGadse.PersistentState(i) for i in ticker_ids)
+        self._states = [TickerGadse.PersistentState(i) for i in ticker_ids]
 
     def save_state(self, fp: BinaryIO) -> None:
         """Save the state to a buffer."""
@@ -89,10 +89,15 @@ class TickerGadse:
         if not all(isinstance(s, TickerGadse.PersistentState) for s in states):
             raise TypeError("invalid type restored from persistent state")
 
-        if {s.ticker_id for s in states} != {s.ticker_id for s in self._states}:
-            raise ValueError("ticker IDs of state don't match")
+        statedict = {s.ticker_id: s for s in states}
+        for i, s in enumerate(self._states):
+            try:
+                self._states[i] = statedict.pop(s.ticker_id)
+            except KeyError as e:
+                logger.warning(f"ticker {e.args[0]} not found in state")
 
-        self._states = states
+        for tid in statedict:
+            logger.warning(f"ticker {tid} not restored")
 
     async def update(self) -> None:
         """Update the state of the crawler."""
