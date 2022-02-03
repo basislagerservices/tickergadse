@@ -1,5 +1,5 @@
 #
-# Copyright 2021 Basislager Services
+# Copyright 2021-2022 Basislager Services
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,3 +16,10 @@
 #
 
 """Crawler for the Seuchenticker Basislager."""
+
+
+__all__ = ("DerStandardAPI", "TickerGadse")
+
+
+from .api import DerStandardAPI
+from .gadse import TickerGadse
