@@ -130,7 +130,8 @@ async def main() -> int:
             date=gadse.last_update.strftime("%d.%m.%Y - %H:%M (UTC)"),
             users=[{"name": k.name, "postings": v} for k, v in gadse.ranking.items()],
         )
-        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        if outdir := os.path.dirname(args.output):
+            os.makedirs(outdir, exist_ok=True)
         with open(args.output, "w") as fpt:
             json.dump(ranking, fpt, indent=4, sort_keys=True)
 
