@@ -118,7 +118,8 @@ async def main() -> int:
 
         # Save the state.
         if args.state_file:
-            os.makedirs(os.path.dirname(args.state_file), exist_ok=True)
+            if statedir := os.path.dirname(args.state_file):
+                os.makedirs(statedir, exist_ok=True)
             with open(args.state_file, "wb") as fpb:
                 gadse.save_state(fpb)
 
