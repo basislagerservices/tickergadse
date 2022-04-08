@@ -36,9 +36,9 @@ logger = logging.getLogger(__name__)
 
 
 class Logbook(Book):
-    """Unsin(n)kable III Logbook."""
+    """Unsin(n)kable Logbook."""
 
-    title = "Unsin(n)kable III"
+    title = "Unsin(n)kable"
     subtitle = "Geschichten aus dem Leben von wahnsinnigen Seeleuten"
     author = "angmar hexenkönig"
 
