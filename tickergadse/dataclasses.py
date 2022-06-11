@@ -44,6 +44,10 @@ class Thread:
     """ID of the ticker this thread belongs to."""
     user: User
     """The user who posted this."""
+    upvotes: int
+    """Number of upvotes if fetched."""
+    downvotes: int
+    """Number of downvotes if fetched."""
     title: Optional[str] = None
     """Title of the thread posting."""
     message: Optional[str] = None
@@ -64,6 +68,10 @@ class Posting:
     """ID of the thread this posting belongs to."""
     published: dt.datetime
     """Datetime this posting was published."""
+    upvotes: int
+    """Number of upvotes if fetched."""
+    downvotes: int
+    """Number of downvotes if fetched."""
     title: Optional[str] = None
     """Title of the posting."""
     message: Optional[str] = None

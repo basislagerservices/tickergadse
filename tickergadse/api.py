@@ -99,6 +99,8 @@ class DerStandardAPI:
                         title=t.get("hl") or None,
                         message=t.get("cm") or None,
                         user=User(user_id=t["cid"], name=t["cn"]),
+                        upvotes=t["vp"],
+                        downvotes=t["vn"],
                     )
                     for t in (await resp.json())["rcs"]
                 ]
@@ -163,6 +165,8 @@ class DerStandardAPI:
                 published=dateparser.parse(p["cd"]).astimezone(pytz.utc),
                 title=p.get("hl") or None,
                 message=p.get("tx") or None,
+                upvotes=p["vp"],
+                downvotes=p["vn"],
             )
             for p in postings
         ]
