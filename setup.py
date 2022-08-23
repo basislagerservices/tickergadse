@@ -35,6 +35,7 @@ setup(
     author_email="services@basislager.fun",
     url="https://basislager.fun",
     packages=["tickergadse"],
+    package_data={"tickergadse": ["py.typed"]},
     install_requires=requirements,
     entry_points={
         "console_scripts": [
