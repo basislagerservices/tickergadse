@@ -32,7 +32,7 @@ setup(
     version="0.2",
     description="Tools for the Seuchenticker Basislager on derstandard.at",
     author="Basislager Services",
-    author_email="services@basislaber.fun",
+    author_email="services@basislager.fun",
     url="https://basislager.fun",
     packages=["tickergadse"],
     install_requires=requirements,
