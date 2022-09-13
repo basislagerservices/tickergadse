@@ -25,7 +25,7 @@ import tempfile
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional, Tuple
 
-from .dataclasses import Thread
+from dstclient import Thread
 
 
 class Book(ABC):

@@ -30,10 +30,10 @@ from typing import BinaryIO, Iterable, Optional
 
 from aiohttp import ClientSession
 
+from dstclient import DerStandardAPI, Posting, Thread, User
+
 import pytz
 
-from .api import DerStandardAPI
-from .dataclasses import Posting, Thread, User
 from .utils import join_dicts
 
 logger = logging.getLogger(__name__)

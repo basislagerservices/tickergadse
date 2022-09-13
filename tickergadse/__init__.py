@@ -18,8 +18,7 @@
 """Crawler for the Seuchenticker Basislager."""
 
 
-__all__ = ("DerStandardAPI", "TickerGadse")
+__all__ = ("TickerGadse",)
 
 
-from .api import DerStandardAPI
 from .gadse import TickerGadse

@@ -24,9 +24,10 @@ import os
 import sys
 from typing import Optional, Type
 
-from .api import DerStandardAPI
+from dstclient import DerStandardAPI
+from dstclient import Thread
+
 from .book import Book
-from .dataclasses import Thread
 
 
 DESCRIPTION = "Generate a book from logbook entries."
