@@ -1,4 +1,4 @@
-dst-client@git+https://github.com/basislagerservices/dst-client.git@f338ab7
+dst-client@git+https://github.com/basislagerservices/dst-client.git@22d4a4fd3d286133508dd5cadb5c588c7fe15d49
 aiohttp
 python-dateutil
 pytz
